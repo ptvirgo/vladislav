@@ -12,6 +12,7 @@ import qualified Network.HTTP.Req as Req
 import GI.Gtk
     ( Box (..)
     , Entry (..)
+    , entryGetText
     , Label (..)
     , Orientation (..)
     , Window (..)
@@ -54,21 +55,28 @@ update' :: State -> Event -> Transition State Event
 update' _ Closed = Exit
 update' s (PickScheme scheme) = updateScheme s scheme
 update' s (PickMethod method) = updateMethod s method
-update' s _ = Transition s (return Nothing) 
+update' s (PickUrl url) = updateUrl s url
 
 updateScheme :: State -> Scheme -> Transition State Event
 updateScheme s scheme =
     let args = reqArgs s
         newArgs = args { reqScheme = scheme }
         newPage = s { reqArgs = newArgs }
-    in Transition newPage (return Nothing)
+    in Transition newPage $ return Nothing
 
 updateMethod :: State -> Method -> Transition State Event
 updateMethod s method =
     let args = reqArgs s
         newArgs = args { reqMethod = method }
         newPage = s { reqArgs = newArgs }
-    in Transition newPage (return Nothing)
+    in Transition newPage $ return Nothing
+
+updateUrl :: State -> T.Text -> Transition State Event
+updateUrl s url =
+    let args = reqArgs s
+        newArgs = args { reqUrl = url }
+        newPage = s { reqArgs = newArgs }
+    in Transition newPage $ return Nothing
 
 -- View
 
@@ -107,10 +115,15 @@ requestSelector :: State -> BoxChild Event
 requestSelector s = container Box
     [ #orientation := OrientationHorizontal ]
     [ BoxChild defaultBoxChildProperties
-        $ Impl.comboBox [HTTPS, HTTP] [] (schemeSelection s)
-    , BoxChild defaultBoxChildProperties
         $ Impl.comboBox [GET, POST, PUT, DELETE, OPTIONS, PATCH] []
           (methodSelection s)
+    , BoxChild defaultBoxChildProperties
+        $ Impl.comboBox [HTTPS, HTTP] [] (schemeSelection s)
+    , BoxChild defaultBoxChildProperties
+        $ widget Entry
+            [ #text := (reqUrl . reqArgs $ s)
+            , onM #changed (\x -> PickUrl <$> entryGetText x)
+            ]
     ]
 
 
