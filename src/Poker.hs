@@ -9,7 +9,7 @@ import Control.Monad (void)
 import qualified Data.Text as T
 import qualified Network.HTTP.Req as Req
 
-import qualified ReqArgs as RA
+import qualified Implements.ReqArgs as RA
 
 import GI.Gtk
     ( Box (..)

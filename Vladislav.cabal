@@ -16,7 +16,10 @@ extra-source-files:  ChangeLog.md
 cabal-version:       >=1.10
 
 library Poker
-  exposed-modules: Implements, Poker, ReqArgs
+  exposed-modules: Poker
+  other-modules:
+    Implements.ComboBox
+    , Implements.ReqArgs
   -- other-modules:
   -- other-extensions:
   build-depends:

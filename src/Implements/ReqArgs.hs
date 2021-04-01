@@ -3,28 +3,34 @@
 {-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module ReqArgs where
+module Implements.ReqArgs where
 
 import qualified Data.Text as T
+import Control.Monad (void)
 
 import GI.Gtk
     ( Box (..)
     , Entry (..)
+    , Frame (..)
     , entryGetText
     , Orientation (..)
+    , TextView (..)
     )
 import GI.Gtk.Declarative
-import qualified Implements as Impl
+import qualified Implements.ComboBox as CB
 
 -- State
 
-data Scheme = HTTP | HTTPS deriving (Eq, Show, Read)
+data Scheme = HTTP | HTTPS deriving (Eq, Show)
 data Method = GET | PUT | POST | DELETE | OPTIONS | PATCH deriving (Eq, Show)
+
+data Body = NoBody | JsonBody deriving (Eq, Show)
 
 data ReqArgs = ReqArgs
     { reqMethod :: Method
     , reqScheme :: Scheme
     , reqUrl :: T.Text
+    , reqBody :: Body
     } deriving (Eq, Show)
 
 type State = ReqArgs
@@ -33,6 +39,7 @@ defaultState = ReqArgs
     { reqMethod = GET
     , reqScheme = HTTPS
     , reqUrl = "www.example.com"
+    , reqBody = NoBody
     }
 
 -- Updates
@@ -64,15 +71,20 @@ methodSelector s _ = PickMethod . reqMethod $ s
 
 requestSelector :: (Event -> wrapper) -> State -> BoxChild wrapper
 requestSelector wrapper s = container Box
-    [ #orientation := OrientationHorizontal ]
-    [ BoxChild defaultBoxChildProperties
-        $ Impl.comboBox [GET, POST, PUT, DELETE, OPTIONS, PATCH] []
-          (wrapper . methodSelector s)
-    , BoxChild defaultBoxChildProperties
-        $ Impl.comboBox [HTTPS, HTTP] [] (wrapper . schemeSelector s)
-    , BoxChild defaultBoxChildProperties
-        $ widget Entry
-            [ #text := reqUrl s
-            , onM #changed (\x -> (wrapper . PickUrl) <$> entryGetText x)
-            ]
+    [ #orientation := OrientationVertical ]
+    [ container Box
+        [ #orientation := OrientationHorizontal ]
+        [ BoxChild defaultBoxChildProperties
+            $ CB.comboBox [GET, POST, PUT, DELETE, OPTIONS, PATCH] []
+              (wrapper . methodSelector s)
+        , BoxChild defaultBoxChildProperties
+            $ CB.comboBox [HTTPS, HTTP] [] (wrapper . schemeSelector s)
+        , BoxChild defaultBoxChildProperties
+            $ widget Entry
+                [ #text := reqUrl s
+                , onM #changed (\x -> (wrapper . PickUrl) <$> entryGetText x)
+                ]
+        ]
+
+    , bin Frame [] $ widget TextView [ #editable := False ]
     ]

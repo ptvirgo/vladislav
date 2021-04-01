@@ -3,7 +3,7 @@
 {-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Implements where
+module Implements.ComboBox where
 
 import Control.Monad
 
